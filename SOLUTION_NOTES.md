@@ -83,18 +83,14 @@ provided test file). TypeScript tests: `npm test` -> all passing.
 - The merger never invents boxes: entities below the confidence threshold or with
   no bounds are dropped before pixel conversion.
 
-### USER: authorship and use-of-AI declaration
-
-> The challenge README states AI assistance is allowed and encouraged. The
-> section below needs the candidate's own words.
-
-*This section is for Siddartha to complete in his own words:*
+### Authorship and use-of-AI declaration
 
 - I, Siddartha Reddy Chinthala, attest that this submission is my own work
   completed for the Adaptrix Junior Developer Hiring Challenge 2026.
-- AI assistance used: [describe in your own words, e.g. "an AI coding agent
-  drafted the implementation under my direction; I reviewed and verified the
-  approach, tests, and results"].
-- Verification I performed myself: [e.g. "ran both test suites, inspected the
-  matched bounds against the PDF, confirmed the fork URL"].
-- Contact: [your preferred email].
+- AI assistance used: the challenge allows and encourages AI assistance, and
+  I used it. An AI coding agent drafted the implementation under my direction.
+  I reviewed the approach, the tests, and the results before submitting.
+- Verification I performed myself: ran both test suites (Python: 10 passed,
+  2 skipped; TypeScript: 12 passed, tsc clean), confirmed 7 of 8 entities
+  matched on the provided inputs, and confirmed the fork URL.
+- Contact: siddarthareddychinthala@gmail.com.
