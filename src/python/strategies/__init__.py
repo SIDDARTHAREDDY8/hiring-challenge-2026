@@ -1,13 +1,13 @@
 """
 Matching strategy implementations.
 
-Implement your chosen strategy(ies) in this package:
-- partial_matcher.py (Option A)
-- aggregation_matcher.py (Option B)
-- fuzzy_matcher.py (Option C)
+- partial_matcher.py (Option A): PartialMatcher
+- aggregation_matcher.py (Option B): AggregationMatcher
+- fuzzy_matcher.py (Option C): FuzzyMatcher
 """
 
-# TODO: Export your implementations
-# from .partial_matcher import PartialMatcher
-# from .aggregation_matcher import AggregationMatcher  
-# from .fuzzy_matcher import FuzzyMatcher
+from src.python.strategies.partial_matcher import PartialMatcher
+from src.python.strategies.aggregation_matcher import AggregationMatcher
+from src.python.strategies.fuzzy_matcher import FuzzyMatcher
+
+__all__ = ["PartialMatcher", "AggregationMatcher", "FuzzyMatcher"]

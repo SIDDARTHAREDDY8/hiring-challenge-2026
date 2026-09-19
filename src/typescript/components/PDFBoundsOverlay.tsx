@@ -3,21 +3,26 @@
  *
  * Renders SVG overlays on top of a PDF viewer to highlight matched entities.
  *
- * WARNING: This component contains intentional bugs for the challenge.
- * Review carefully before using.
+ * Bugs fixed from the provided base code:
+ *  - onEntityClick, selectedEntity, showConfidence are now optional props
+ *    with sensible defaults (previously required, crashing callers that
+ *    did not pass them).
+ *  - handleEntityClick no longer crashes when onEntityClick is undefined
+ *    (defaults to a no-op handler).
+ *  - Rect uses onMouseDown instead of onClick for more responsive UX.
  */
 
 import React, { useMemo } from 'react';
 import type { MergedBounds, PDFDimensions } from '../types';
 
-// BUG: Missing optional marker on several props
+// FIX (was BUG): optional props carry the optional marker and get defaults.
 interface PDFBoundsOverlayProps {
   bounds: MergedBounds[];
   pdfDimensions: PDFDimensions;
   currentPage: number;
-  onEntityClick: (entityName: string) => void; // BUG: Should be optional with ?
-  selectedEntity: string; // BUG: Should be optional with ?
-  showConfidence: boolean; // BUG: Should be optional with ?
+  onEntityClick?: (entityName: string) => void;
+  selectedEntity?: string;
+  showConfidence?: boolean;
 }
 
 interface BoundsRectProps {
@@ -35,7 +40,7 @@ const BoundsRect: React.FC<BoundsRectProps> = ({
 }) => {
   const { pixel_bounds, entity_name, confidence, color } = bounds;
 
-  const handleClick = () => {
+  const handleMouseDown = () => {
     onClick(entity_name);
   };
 
@@ -50,8 +55,8 @@ const BoundsRect: React.FC<BoundsRectProps> = ({
         fillOpacity={isSelected ? 0.4 : 0.2}
         stroke={color}
         strokeWidth={isSelected ? 2 : 1}
-        // BUG: Using onClick but should be onMouseDown for better UX
-        onClick={handleClick}
+        // FIX (was BUG): onMouseDown responds faster than onClick for overlays.
+        onMouseDown={handleMouseDown}
         style={{ cursor: 'pointer' }}
       />
       {showConfidence && (
@@ -72,9 +77,10 @@ export const PDFBoundsOverlay: React.FC<PDFBoundsOverlayProps> = ({
   bounds,
   pdfDimensions,
   currentPage,
-  onEntityClick,
-  selectedEntity,
-  showConfidence,
+  // FIX (was BUG): default no-op handler so an undefined callback never crashes.
+  onEntityClick = () => {},
+  selectedEntity = '',
+  showConfidence = false,
 }) => {
   // Filter bounds for current page
   const pageBounds = useMemo(
@@ -82,7 +88,6 @@ export const PDFBoundsOverlay: React.FC<PDFBoundsOverlayProps> = ({
     [bounds, currentPage]
   );
 
-  // BUG: Missing default handler when onEntityClick is undefined
   const handleEntityClick = (entityName: string) => {
     onEntityClick(entityName);
   };

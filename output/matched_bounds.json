@@ -1,0 +1,232 @@
+{
+  "matched_entities": [
+    {
+      "entity_name": "49.99% On-Time Delivery Rate",
+      "entity_type": "KPI",
+      "match_strategy": "aggregation",
+      "confidence": 0.95,
+      "bounds": {
+        "page": 2,
+        "x": 0.341881,
+        "y": 0.412678,
+        "width": 0.543757,
+        "height": 0.040697
+      },
+      "component_matches": [
+        {
+          "text": "49.99%",
+          "bounds": {
+            "page": 2,
+            "x": 0.341881,
+            "y": 0.434458,
+            "width": 0.060788,
+            "height": 0.018917
+          }
+        },
+        {
+          "text": "On-Time Delivery Rate",
+          "bounds": {
+            "page": 2,
+            "x": 0.807062,
+            "y": 0.412678,
+            "width": 0.078575,
+            "height": 0.018917
+          }
+        }
+      ]
+    },
+    {
+      "entity_name": "78.5 % OEE",
+      "entity_type": "KPI",
+      "match_strategy": "aggregation",
+      "confidence": 0.95,
+      "bounds": {
+        "page": 2,
+        "x": 0.33834,
+        "y": 0.390898,
+        "width": 0.356709,
+        "height": 0.018917
+      },
+      "component_matches": [
+        {
+          "text": "78.5%",
+          "bounds": {
+            "page": 2,
+            "x": 0.644327,
+            "y": 0.390898,
+            "width": 0.050722,
+            "height": 0.018917
+          }
+        },
+        {
+          "text": "OEE",
+          "bounds": {
+            "page": 2,
+            "x": 0.33834,
+            "y": 0.390898,
+            "width": 0.035732,
+            "height": 0.018917
+          }
+        }
+      ]
+    },
+    {
+      "entity_name": "Return Rate 24.96%",
+      "entity_type": "KPI",
+      "match_strategy": "exact",
+      "confidence": 1.0,
+      "bounds": {
+        "page": 4,
+        "x": 0.133088,
+        "y": 0.329029,
+        "width": 0.101732,
+        "height": 0.018917
+      },
+      "component_matches": [
+        {
+          "text": "Return Rate 24.96%",
+          "bounds": {
+            "page": 4,
+            "x": 0.133088,
+            "y": 0.329029,
+            "width": 0.101732,
+            "height": 0.018917
+          }
+        }
+      ]
+    },
+    {
+      "entity_name": "On-Time-Delivery",
+      "entity_type": "KPI",
+      "match_strategy": "fuzzy",
+      "confidence": 1.0,
+      "bounds": {
+        "page": 2,
+        "x": 0.807062,
+        "y": 0.412678,
+        "width": 0.078575,
+        "height": 0.018917
+      },
+      "component_matches": [
+        {
+          "text": "On-Time Delivery",
+          "bounds": {
+            "page": 2,
+            "x": 0.807062,
+            "y": 0.412678,
+            "width": 0.078575,
+            "height": 0.018917
+          }
+        }
+      ]
+    },
+    {
+      "entity_name": "Week 45, FY2023",
+      "entity_type": "DATE",
+      "match_strategy": "partial",
+      "confidence": 0.7,
+      "bounds": {
+        "page": 1,
+        "x": 0.17067,
+        "y": 0.071598,
+        "width": 0.114154,
+        "height": 0.044712
+      },
+      "component_matches": [
+        {
+          "text": "Week 45, FY2023",
+          "bounds": null
+        },
+        {
+          "text": "Week 45,",
+          "bounds": null
+        },
+        {
+          "text": "45, FY2023",
+          "bounds": null
+        },
+        {
+          "text": "Week",
+          "bounds": {
+            "page": 1,
+            "x": 0.17067,
+            "y": 0.071598,
+            "width": 0.114154,
+            "height": 0.044712
+          }
+        }
+      ]
+    },
+    {
+      "entity_name": "November 6-12, 2023",
+      "entity_type": "DATE",
+      "match_strategy": "exact",
+      "confidence": 1.0,
+      "bounds": {
+        "page": 1,
+        "x": 0.453895,
+        "y": 0.185823,
+        "width": 0.191745,
+        "height": 0.020636
+      },
+      "component_matches": [
+        {
+          "text": "November 6-12, 2023",
+          "bounds": {
+            "page": 1,
+            "x": 0.453895,
+            "y": 0.185823,
+            "width": 0.191745,
+            "height": 0.020636
+          }
+        }
+      ]
+    },
+    {
+      "entity_name": "Gearhead Cycles",
+      "entity_type": "ORGANIZATION",
+      "match_strategy": "exact",
+      "confidence": 1.0,
+      "bounds": {
+        "page": 1,
+        "x": 0.222304,
+        "y": 0.141535,
+        "width": 0.205412,
+        "height": 0.027515
+      },
+      "component_matches": [
+        {
+          "text": "Gearhead Cycles",
+          "bounds": {
+            "page": 1,
+            "x": 0.222304,
+            "y": 0.141535,
+            "width": 0.205412,
+            "height": 0.027515
+          }
+        }
+      ]
+    },
+    {
+      "entity_name": "Pacific Components Ltd.",
+      "entity_type": "ORGANIZATION",
+      "match_strategy": "none",
+      "confidence": 0.0,
+      "bounds": null,
+      "component_matches": []
+    }
+  ],
+  "statistics": {
+    "total_entities": 8,
+    "matched": 7,
+    "partial_matched": 0,
+    "unmatched": 1,
+    "strategies_used": {
+      "aggregation": 2,
+      "exact": 3,
+      "fuzzy": 1,
+      "partial": 1,
+      "none": 1
+    }
+  }
+}

@@ -1,14 +1,12 @@
 /**
- * Bounds Merger - Senior Challenge
+ * Bounds Merger - challenge implementation.
  *
- * Your task: Implement the bounds merging and coordinate conversion
- * for the PDF visualization overlay.
- *
- * Deliverables:
- * 1. Parse matched bounds from Python output
- * 2. Merge overlapping bounding boxes
- * 3. Convert normalized coordinates to pixel coordinates
- * 4. Export data for React component consumption
+ * Processes matched bounds from the Python matcher for the PDF
+ * visualization overlay:
+ *  1. Validates and loads match results.
+ *  2. Converts normalized (0-1) bounds to pixel coordinates.
+ *  3. Detects overlapping bounds (IoU) and merges them into single boxes.
+ *  4. Adds per-entity-type colors for the React overlay component.
  */
 
 import type {
@@ -24,7 +22,7 @@ import type {
  * Configuration for bounds merging.
  */
 interface MergerConfig {
-  overlapThreshold: number; // Minimum overlap percentage to merge (0-1)
+  overlapThreshold: number; // Minimum IoU to merge (0-1)
   confidenceThreshold: number; // Minimum confidence to include
   colorScheme: Record<string, string>; // Entity type -> color mapping
 }
@@ -42,13 +40,6 @@ const DEFAULT_CONFIG: MergerConfig = {
 
 /**
  * BoundsMerger class - processes matched entities for visualization.
- *
- * TODO: Implement the following methods:
- * 1. loadResults()
- * 2. convertToPixels()
- * 3. detectOverlaps()
- * 4. mergeBounds()
- * 5. getVisualizationData()
  */
 export class BoundsMerger {
   private results: MatchResult | null = null;
@@ -60,10 +51,20 @@ export class BoundsMerger {
   }
 
   /**
-   * Load match results from JSON.
+   * Validate and load match results from JSON.
    */
   loadResults(jsonData: MatchResult): void {
-    // TODO: Validate and load results
+    if (!jsonData || !Array.isArray(jsonData.matched_entities)) {
+      throw new Error('Invalid match results: missing matched_entities array');
+    }
+    for (const entity of jsonData.matched_entities) {
+      if (
+        typeof entity.entity_name !== 'string' ||
+        typeof entity.confidence !== 'number'
+      ) {
+        throw new Error('Invalid match results: malformed entity entry');
+      }
+    }
     this.results = jsonData;
   }
 
@@ -77,66 +78,76 @@ export class BoundsMerger {
   /**
    * Convert normalized bounds (0-1) to pixel coordinates.
    *
+   * pixel_x = normalized_x * page_width * scale, etc.
+   *
    * @param bounds - Normalized bounds from Python
    * @returns Pixel bounds for SVG rendering
    */
   convertToPixels(bounds: Bounds): PixelBounds {
-    // TODO: Implement coordinate conversion
-    //
-    // Formula:
-    // pixel_x = normalized_x * page_width * scale
-    // pixel_y = normalized_y * page_height * scale
-    // pixel_width = normalized_width * page_width * scale
-    // pixel_height = normalized_height * page_height * scale
-
     if (!this.pdfDimensions) {
       throw new Error('PDF dimensions not set');
     }
-
+    const { width, height, scale } = this.pdfDimensions;
+    const round2 = (n: number): number => Math.round(n * 100) / 100;
     return {
       page: bounds.page,
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
+      x: round2(bounds.x * width * scale),
+      y: round2(bounds.y * height * scale),
+      width: round2(bounds.width * width * scale),
+      height: round2(bounds.height * height * scale),
     };
   }
 
   /**
-   * Check if two bounds overlap.
+   * Intersection-over-union of two pixel bounds.
    *
-   * @param a - First bounds
-   * @param b - Second bounds
-   * @returns Overlap percentage (0-1)
+   * Bounds on different pages never overlap.
+   *
+   * @returns Overlap ratio (0-1)
    */
   calculateOverlap(a: PixelBounds, b: PixelBounds): number {
-    // TODO: Implement overlap calculation
-    //
-    // If on different pages, no overlap
-    // Calculate intersection area
-    // Return intersection / union ratio
+    if (a.page !== b.page) {
+      return 0;
+    }
+    const x0 = Math.max(a.x, b.x);
+    const y0 = Math.max(a.y, b.y);
+    const x1 = Math.min(a.x + a.width, b.x + b.width);
+    const y1 = Math.min(a.y + a.height, b.y + b.height);
 
-    return 0;
+    const interWidth = Math.max(0, x1 - x0);
+    const interHeight = Math.max(0, y1 - y0);
+    const intersection = interWidth * interHeight;
+    if (intersection === 0) {
+      return 0;
+    }
+
+    const union =
+      a.width * a.height + b.width * b.height - intersection;
+    return union === 0 ? 0 : intersection / union;
   }
 
   /**
-   * Merge overlapping bounds into a single bounding box.
+   * Merge bounds into the smallest single box containing all of them.
    *
-   * @param boundsArray - Array of bounds to potentially merge
-   * @returns Merged bounds
+   * @param boundsArray - Array of bounds to merge (same page expected)
+   * @returns Encompassing pixel bounds
    */
   mergeBounds(boundsArray: PixelBounds[]): PixelBounds {
-    // TODO: Implement bounds merging
-    //
-    // Find the minimum x, minimum y
-    // Find the maximum (x + width), maximum (y + height)
-    // Return encompassing bounds
-
     if (boundsArray.length === 0) {
       throw new Error('Cannot merge empty bounds array');
     }
-
-    return boundsArray[0];
+    const x0 = Math.min(...boundsArray.map((b) => b.x));
+    const y0 = Math.min(...boundsArray.map((b) => b.y));
+    const x1 = Math.max(...boundsArray.map((b) => b.x + b.width));
+    const y1 = Math.max(...boundsArray.map((b) => b.y + b.height));
+    const round2 = (n: number): number => Math.round(n * 100) / 100;
+    return {
+      page: boundsArray[0].page,
+      x: round2(x0),
+      y: round2(y0),
+      width: round2(x1 - x0),
+      height: round2(y1 - y0),
+    };
   }
 
   /**
@@ -147,36 +158,105 @@ export class BoundsMerger {
   }
 
   /**
+   * Group pixel bounds by page, then greedily merge pairs whose IoU
+   * meets the overlap threshold (union-find, so merge chains collapse).
+   */
+  private mergeOverlaps(
+    items: Array<{ entity: MatchedEntity; pixels: PixelBounds }>
+  ): Array<{ entity: MatchedEntity; pixels: PixelBounds }> {
+    // Union-find over item indices.
+    const parent = items.map((_, i) => i);
+    const find = (i: number): number => {
+      while (parent[i] !== i) {
+        parent[i] = parent[parent[i]];
+        i = parent[i];
+      }
+      return i;
+    };
+    const union = (i: number, j: number): void => {
+      parent[find(i)] = find(j);
+    };
+
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        if (
+          this.calculateOverlap(items[i].pixels, items[j].pixels) >=
+          this.config.overlapThreshold
+        ) {
+          union(i, j);
+        }
+      }
+    }
+
+    const groups = new Map<number, number[]>();
+    items.forEach((_, i) => {
+      const root = find(i);
+      if (!groups.has(root)) {
+        groups.set(root, []);
+      }
+      groups.get(root)!.push(i);
+    });
+
+    return [...groups.values()].map((indices) => {
+      const pixels = this.mergeBounds(indices.map((i) => items[i].pixels));
+      const names = indices.map((i) => items[i].entity.entity_name);
+      const best = indices.reduce((a, b) =>
+        items[a].entity.confidence >= items[b].entity.confidence ? a : b
+      );
+      const mergedEntity: MatchedEntity = {
+        ...items[best].entity,
+        entity_name: names.join(' + '),
+        confidence: Math.max(
+          ...indices.map((i) => items[i].entity.confidence)
+        ),
+      };
+      return { entity: mergedEntity, pixels };
+    });
+  }
+
+  /**
    * Process all matched entities and return visualization-ready data.
+   *
+   * Pipeline: confidence filter -> pixel conversion -> page grouping ->
+   * overlap merging -> color assignment.
    *
    * @returns Array of merged bounds ready for SVG rendering
    */
   getVisualizationData(): MergedBounds[] {
-    // TODO: Implement full processing pipeline
-    //
-    // 1. Filter by confidence threshold
-    // 2. Convert all bounds to pixels
-    // 3. Group by page
-    // 4. Detect and merge overlapping bounds
-    // 5. Add colors based on entity type
-    // 6. Return visualization-ready data
-
     if (!this.results) {
       throw new Error('No results loaded');
     }
 
-    const visualData: MergedBounds[] = [];
-
+    const converted: Array<{ entity: MatchedEntity; pixels: PixelBounds }> = [];
     for (const entity of this.results.matched_entities) {
       if (entity.confidence < this.config.confidenceThreshold) {
         continue;
       }
+      if (!entity.bounds) {
+        continue;
+      }
+      converted.push({
+        entity,
+        pixels: this.convertToPixels(entity.bounds),
+      });
+    }
 
-      if (entity.bounds) {
-        const pixelBounds = this.convertToPixels(entity.bounds);
+    // Merge overlaps within each page.
+    const byPage = new Map<number, typeof converted>();
+    for (const item of converted) {
+      const page = item.pixels.page;
+      if (!byPage.has(page)) {
+        byPage.set(page, []);
+      }
+      byPage.get(page)!.push(item);
+    }
+
+    const visualData: MergedBounds[] = [];
+    for (const pageItems of byPage.values()) {
+      for (const { entity, pixels } of this.mergeOverlaps(pageItems)) {
         visualData.push({
           entity_name: entity.entity_name,
-          pixel_bounds: pixelBounds,
+          pixel_bounds: pixels,
           confidence: entity.confidence,
           color: this.getEntityColor(entity.entity_type),
         });
